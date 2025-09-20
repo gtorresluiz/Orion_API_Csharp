@@ -1,77 +1,109 @@
-﻿using System.Text.Json;
-using SprintCsharp.Application.Interfaces;
-using SprintCsharp.Domain.Entities;
+﻿using SprintCsharp.Domain.Entities;
+using SprintCsharp.Infra.Repositories;
 
 namespace SprintCsharp.Application.Services;
 
-public class UserService : IUserService
+public class UserService
 {
-    private readonly IUserRepository _repo;
-    public UserService(IUserRepository repo) => _repo = repo;
+    private readonly UserRepository _repo;
 
-    public async Task<User> CreateAsync(string name, string email, decimal initialBalance,
-        InvestmentType preferred, ProfessionLevel level)
+    public UserService(UserRepository repo)
     {
-        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Nome inválido");
-        if (!email.Contains("@")) throw new ArgumentException("Email inválido");
+        _repo = repo;
+    }
+
+    public async Task<List<User>> ListAsync() => await _repo.GetAllAsync();
+
+    public async Task<User?> GetAsync(int id) => await _repo.GetByIdAsync(id);
+
+    /// <summary>Cria usuário. Retorna o usuário criado ou null em caso de validação falha.</summary>
+    public async Task<(bool Success, string Message, User? Created)> CreateAsync(string name, string email, string balanceInput, InvestmentType investment, ProfessionLevel level)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return (false, "Nome é obrigatório.", null);
+
+        if (!User.IsValidEmail(email))
+            return (false, "E-mail inválido.", null);
+
+        if (!decimal.TryParse(balanceInput, out var balance))
+            return (false, "Saldo inválido. Informe um número (ex: 1000.50).", null);
+
         var user = new User
         {
             Name = name.Trim(),
             Email = email.Trim(),
-            Balance = initialBalance,
-            PreferredInvestment = preferred,
-            Level = level
+            Balance = balance,
+            PreferredInvestment = investment,
+            Level = level,
+            UpdatedAt = DateTime.UtcNow
         };
-        return await _repo.AddAsync(user);
+
+        var created = await _repo.AddAsync(user);
+        return (true, "Usuário criado com sucesso.", created);
     }
 
-    public Task<IEnumerable<User>> GetAllAsync() => _repo.GetAllAsync();
-    public Task<User?> GetByIdAsync(int id) => _repo.GetByIdAsync(id);
-    public Task UpdateAsync(User user) => _repo.UpdateAsync(user);
-    public Task DeleteAsync(int id) => _repo.DeleteAsync(id);
-
-    public async Task DepositAsync(int id, decimal amount)
+    /// <summary>Atualiza usuário existente. Retorna true se atualizado.</summary>
+    public async Task<(bool Success, string Message)> UpdateAsync(int id, string name, string email, string balanceInput, InvestmentType investment, ProfessionLevel level)
     {
-        if (amount <= 0) throw new ArgumentException("Valor deve ser maior que zero");
-        var u = await _repo.GetByIdAsync(id) ?? throw new KeyNotFoundException("Usuário não encontrado");
-        u.Balance += amount;
-        await _repo.UpdateAsync(u);
+        var user = await _repo.GetByIdAsync(id);
+        if (user == null) return (false, "Usuário não encontrado.");
+
+        if (string.IsNullOrWhiteSpace(name))
+            return (false, "Nome é obrigatório.");
+
+        if (!User.IsValidEmail(email))
+            return (false, "E-mail inválido.");
+
+        if (!decimal.TryParse(balanceInput, out var balance))
+            return (false, "Saldo inválido. Informe um número (ex: 1000.50).");
+
+        user.Name = name.Trim();
+        user.Email = email.Trim();
+        user.Balance = balance;
+        user.PreferredInvestment = investment;
+        user.Level = level;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _repo.UpdateAsync(user);
+        return (true, "Usuário atualizado com sucesso.");
     }
 
-    public async Task WithdrawAsync(int id, decimal amount)
+    public async Task<(bool Success, string Message)> DeleteAsync(int id)
     {
-        if (amount <= 0) throw new ArgumentException("Valor deve ser maior que zero");
-        var u = await _repo.GetByIdAsync(id) ?? throw new KeyNotFoundException("Usuário não encontrado");
-        if (u.Balance < amount) throw new InvalidOperationException("Saldo insuficiente");
-        u.Balance -= amount;
-        await _repo.UpdateAsync(u);
+        var user = await _repo.GetByIdAsync(id);
+        if (user == null) return (false, "Usuário não encontrado.");
+
+        await _repo.DeleteAsync(user);
+        return (true, "Usuário deletado com sucesso.");
     }
 
-    public async Task ExportToJsonAsync(string path)
+    public async Task<(bool Success, string Message)> DepositAsync(int id, string amountInput)
     {
-        var users = await _repo.GetAllAsync();
-        var opts = new JsonSerializerOptions { WriteIndented = true };
-        var json = JsonSerializer.Serialize(users, opts);
-        await File.WriteAllTextAsync(path, json);
+        if (!decimal.TryParse(amountInput, out var amount) || amount <= 0)
+            return (false, "Valor de depósito inválido. Deve ser número positivo.");
+
+        var user = await _repo.GetByIdAsync(id);
+        if (user == null) return (false, "Usuário não encontrado.");
+
+        user.Balance += amount;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _repo.UpdateAsync(user);
+        return (true, "Depósito efetuado.");
     }
 
-    public async Task ImportFromJsonAsync(string path)
+    public async Task<(bool Success, string Message)> WithdrawAsync(int id, string amountInput)
     {
-        if (!File.Exists(path)) throw new FileNotFoundException(path);
-        var json = await File.ReadAllTextAsync(path);
-        var users = JsonSerializer.Deserialize<List<User>>(json);
-        if (users == null) return;
-        foreach (var u in users)
-        {
-            u.Id = 0; // força insert
-            await _repo.AddAsync(u);
-        }
-    }
+        if (!decimal.TryParse(amountInput, out var amount) || amount <= 0)
+            return (false, "Valor de saque inválido. Deve ser número positivo.");
 
-    public async Task ExportToTxtAsync(string path)
-    {
-        var users = await _repo.GetAllAsync();
-        var lines = users.Select(u => $"{u.Id};{u.Name};{u.Email};{u.Balance};{u.PreferredInvestment};{u.Level}");
-        await File.WriteAllLinesAsync(path, lines);
+        var user = await _repo.GetByIdAsync(id);
+        if (user == null) return (false, "Usuário não encontrado.");
+
+        if (user.Balance < amount) return (false, "Saldo insuficiente.");
+
+        user.Balance -= amount;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _repo.UpdateAsync(user);
+        return (true, "Saque efetuado.");
     }
 }

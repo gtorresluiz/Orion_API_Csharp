@@ -1,0 +1,35 @@
+var users = await userRepository.GetAllAsync();
+if (users.Count == 0)
+{
+    Console.WriteLine("Nenhum usuário cadastrado.");
+}
+else
+{
+    foreach (var user in users)
+    {
+        Console.WriteLine($"Id: {user.Id}");
+        Console.WriteLine($"Nome: {user.Name}");
+        Console.WriteLine($"Email: {user.Email}");
+        Console.WriteLine($"Saldo: {user.Balance}");
+        Console.WriteLine($"Investimento: {user.PreferredInvestment}");
+        Console.WriteLine($"Nível: {user.Level}");
+        Console.WriteLine($"Criado em: {user.CreatedAt}");
+        Console.WriteLine($"Atualizado em: {user.UpdatedAt}");
+        Console.WriteLine(new string('-', 30));
+    }
+}
+
+var initialUsers = new List<User>()
+{
+    new User()
+    {
+        Id = 1,
+        Name = "João da Silva",
+        Email = "joao.silva@email.com",
+        Balance = 1000.50,
+        PreferredInvestment = 0,
+        Level = 2,
+        CreatedAt = new DateTime(2024, 6, 1, 12, 0, 0, DateTimeKind.Utc),
+        UpdatedAt = null
+    }
+};

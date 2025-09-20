@@ -1,21 +1,9 @@
-﻿namespace SprintCsharp.Domain.Entities;
+﻿using System.Text.RegularExpressions;
 
-public enum InvestmentType
-{
-    RendaFixa = 0,
-    RendaVariavel = 1,
-    TesouroDireto = 2,
-    Cripto = 3
-}
+namespace SprintCsharp.Domain.Entities;
 
-public enum ProfessionLevel
-{
-    Estagiario = 0,
-    Junior = 1,
-    Pleno = 2,
-    Senior = 3,
-    Lead = 4
-}
+public enum InvestmentType { RendaFixa = 0, RendaVariavel = 1, TesouroDireto = 2, Cripto = 3 }
+public enum ProfessionLevel { Estagiario = 0, Junior = 1, Pleno = 2, Senior = 3, Lead = 4 }
 
 public class User
 {
@@ -25,6 +13,8 @@ public class User
     public decimal Balance { get; set; } = 0m;
     public InvestmentType PreferredInvestment { get; set; } = InvestmentType.RendaFixa;
     public ProfessionLevel Level { get; set; } = ProfessionLevel.Estagiario;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    public static bool IsValidEmail(string email)
+        => Regex.IsMatch(email ?? string.Empty, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
 }

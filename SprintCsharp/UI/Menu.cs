@@ -1,104 +1,181 @@
-﻿using SprintCsharp.Application.Interfaces;
+﻿using SprintCsharp.Application.Services;
 using SprintCsharp.Domain.Entities;
 
 namespace SprintCsharp.UI;
 
-public static class Menu
+public class ConsoleApp
 {
-    public static async Task RunAsync(IUserService svc)
+    private readonly UserService _svc;
+
+    public ConsoleApp(UserService svc)
     {
-        while (true)
+        _svc = svc;
+    }
+
+    public async Task RunAsync()
+    {
+        var running = true;
+        while (running)
         {
             Console.Clear();
             Console.WriteLine("=== InvestmentApp (Console) ===");
             Console.WriteLine("1) Criar usuário");
             Console.WriteLine("2) Listar usuários");
-            Console.WriteLine("3) Depositar");
-            Console.WriteLine("4) Sacar");
-            Console.WriteLine("5) Exportar JSON");
-            Console.WriteLine("6) Importar JSON");
-            Console.WriteLine("7) Exportar TXT");
-            Console.WriteLine("8) Sair");
+            Console.WriteLine("3) Editar usuário");
+            Console.WriteLine("4) Deletar usuário");
+            Console.WriteLine("5) Depositar");
+            Console.WriteLine("6) Sacar");
+            Console.WriteLine("7) Sair");
             Console.Write("Opção: ");
+
             var opt = Console.ReadLine();
             try
             {
                 switch (opt)
                 {
-                    case "1": await CreateUser(svc); break;
-                    case "2": await ListUsers(svc); break;
-                    case "3": await Deposit(svc); break;
-                    case "4": await Withdraw(svc); break;
-                    case "5": await ExportJson(svc); break;
-                    case "6": await ImportJson(svc); break;
-                    case "7": await ExportTxt(svc); break;
-                    case "8": return;
-                    default: Console.WriteLine("Opção inválida"); break;
+                    case "1": await Create(); break;
+                    case "2": await List(); break;
+                    case "3": await Edit(); break;
+                    case "4": await Delete(); break;
+                    case "5": await Deposit(); break;
+                    case "6": await Withdraw(); break;
+                    case "7": running = false; break;
+                    default: Console.WriteLine("Opção inválida."); break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro: {ex.Message}");
+                Console.WriteLine($"Erro inesperado: {ex.Message}");
             }
-            Console.WriteLine("Pressione Enter para continuar...");
-            Console.ReadLine();
+
+            if (running)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Pressione Enter para continuar...");
+                Console.ReadLine();
+            }
         }
     }
 
-    static async Task CreateUser(IUserService svc)
+    private async Task Create()
     {
-        Console.Write("Nome: "); var name = Console.ReadLine() ?? "";
-        Console.Write("Email: "); var email = Console.ReadLine() ?? "";
-        Console.Write("Saldo inicial: "); var bal = decimal.TryParse(Console.ReadLine(), out var v) ? v : 0m;
-        Console.WriteLine("Tipos: 0=RendaFixa,1=RendaVariavel,2=TesouroDireto,3=Cripto");
-        Console.Write("Tipo (numero): "); var t = int.TryParse(Console.ReadLine(), out var ti) ? ti : 0;
-        Console.WriteLine("Níveis: 0=Estagiario,1=Junior,2=Pleno,3=Senior,4=Lead");
-        Console.Write("Nível (numero): "); var l = int.TryParse(Console.ReadLine(), out var li) ? li : 0;
-        var user = await svc.CreateAsync(name, email, bal, (InvestmentType)t, (ProfessionLevel)l);
-        Console.WriteLine($"Criado: Id={user.Id} Nome={user.Name}");
+        Console.Write("Nome: ");
+        var name = Console.ReadLine() ?? string.Empty;
+
+        Console.Write("Email: ");
+        var email = Console.ReadLine() ?? string.Empty;
+
+        Console.Write("Saldo inicial: ");
+        var balance = Console.ReadLine() ?? "0";
+
+        Console.WriteLine("Tipo investimento (0=RendaFixa,1=RendaVariavel,2=TesouroDireto,3=Cripto): ");
+        var t = Console.ReadLine();
+        var inv = ParseEnum<InvestmentType>(t, InvestmentType.RendaFixa);
+
+        Console.WriteLine("Nível (0=Estagiario,1=Junior,2=Pleno,3=Senior,4=Lead): ");
+        var l = Console.ReadLine();
+        var lvl = ParseEnum<ProfessionLevel>(l, ProfessionLevel.Estagiario);
+
+        var (success, message, created) = await _svc.CreateAsync(name, email, balance, inv, lvl);
+        Console.WriteLine(message);
+        if (success && created != null) Console.WriteLine($"Id: {created.Id}");
     }
 
-    static async Task ListUsers(IUserService svc)
+    private async Task List()
     {
-        var users = await svc.GetAllAsync();
-        Console.WriteLine("Id | Nome | Email | Saldo | Investimento | Nível");
-        foreach (var u in users) Console.WriteLine($"{u.Id} | {u.Name} | {u.Email} | {u.Balance} | {u.PreferredInvestment} | {u.Level}");
+        var users = await _svc.ListAsync();
+        if (users.Count == 0)
+        {
+            Console.WriteLine("Nenhum usuário cadastrado.");
+            return;
+        }
+
+        Console.WriteLine("Id | Nome | Email | Saldo | Investimento | Nível | UpdatedAt");
+        foreach (var u in users)
+        {
+            Console.WriteLine($"{u.Id} | {u.Name} | {u.Email} | {u.Balance} | {u.PreferredInvestment} | {u.Level} | {u.UpdatedAt?.ToString("s")}");
+        }
     }
 
-    static async Task Deposit(IUserService svc)
+    private async Task Edit()
     {
-        Console.Write("Id do usuário: "); var id = int.Parse(Console.ReadLine() ?? "0");
-        Console.Write("Valor: "); var v = decimal.Parse(Console.ReadLine() ?? "0");
-        await svc.DepositAsync(id, v);
-        Console.WriteLine("Depósito efetuado.");
+        Console.Write("Id do usuário a editar: ");
+        if (!int.TryParse(Console.ReadLine(), out var id)) { Console.WriteLine("Id inválido."); return; }
+
+        var user = await _svc.GetAsync(id);
+        if (user == null) { Console.WriteLine("Usuário não encontrado."); return; }
+
+        Console.Write($"Nome ({user.Name}): ");
+        var name = ReadOrDefault(user.Name);
+
+        Console.Write($"Email ({user.Email}): ");
+        var email = ReadOrDefault(user.Email);
+
+        Console.Write($"Saldo ({user.Balance}): ");
+        var balance = ReadOrDefault(user.Balance.ToString());
+
+        Console.WriteLine($"Tipo investimento ({(int)user.PreferredInvestment}): ");
+        var t = Console.ReadLine();
+        var inv = ParseEnum<InvestmentType>(t, user.PreferredInvestment);
+
+        Console.WriteLine($"Nível ({(int)user.Level}): ");
+        var l = Console.ReadLine();
+        var lvl = ParseEnum<ProfessionLevel>(l, user.Level);
+
+        var (success, message) = await _svc.UpdateAsync(id, name, email, balance, inv, lvl);
+        Console.WriteLine(message);
     }
 
-    static async Task Withdraw(IUserService svc)
+    private async Task Delete()
     {
-        Console.Write("Id do usuário: "); var id = int.Parse(Console.ReadLine() ?? "0");
-        Console.Write("Valor: "); var v = decimal.Parse(Console.ReadLine() ?? "0");
-        await svc.WithdrawAsync(id, v);
-        Console.WriteLine("Saque efetuado.");
+        Console.Write("Id do usuário a deletar: ");
+        if (!int.TryParse(Console.ReadLine(), out var id)) { Console.WriteLine("Id inválido."); return; }
+
+        var (success, message) = await _svc.DeleteAsync(id);
+        Console.WriteLine(message);
     }
 
-    static async Task ExportJson(IUserService svc)
+    private async Task Deposit()
     {
-        Console.Write("Caminho (ex: users.json): "); var p = Console.ReadLine() ?? "users.json";
-        await svc.ExportToJsonAsync(p);
-        Console.WriteLine("Exportado.");
+        Console.Write("Id do usuário: ");
+        if (!int.TryParse(Console.ReadLine(), out var id)) { Console.WriteLine("Id inválido."); return; }
+
+        Console.Write("Valor a depositar: ");
+        var amount = Console.ReadLine() ?? string.Empty;
+
+        var (success, message) = await _svc.DepositAsync(id, amount);
+        Console.WriteLine(message);
     }
 
-    static async Task ImportJson(IUserService svc)
+    private async Task Withdraw()
     {
-        Console.Write("Caminho do arquivo JSON: "); var p = Console.ReadLine() ?? "users.json";
-        await svc.ImportFromJsonAsync(p);
-        Console.WriteLine("Importado.");
+        Console.Write("Id do usuário: ");
+        if (!int.TryParse(Console.ReadLine(), out var id)) { Console.WriteLine("Id inválido."); return; }
+
+        Console.Write("Valor a sacar: ");
+        var amount = Console.ReadLine() ?? string.Empty;
+
+        var (success, message) = await _svc.WithdrawAsync(id, amount);
+        Console.WriteLine(message);
     }
 
-    static async Task ExportTxt(IUserService svc)
+    private static string ReadOrDefault(string defaultValue)
     {
-        Console.Write("Caminho (ex: users.txt): "); var p = Console.ReadLine() ?? "users.txt";
-        await svc.ExportToTxtAsync(p);
-        Console.WriteLine("Exportado.");
+        var input = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(input)) return defaultValue;
+        return input.Trim();
+    }
+
+    private static T ParseEnum<T>(string? input, T @default) where T : struct, Enum
+    {
+        if (string.IsNullOrWhiteSpace(input)) return @default;
+        if (int.TryParse(input, out var num) && Enum.IsDefined(typeof(T), num))
+        {
+            return (T)Enum.ToObject(typeof(T), num);
+        }
+
+        // tenta parse por nome (ex: "RendaFixa")
+        if (Enum.TryParse<T>(input, true, out var parsed)) return parsed;
+        return @default;
     }
 }

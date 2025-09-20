@@ -1,25 +1,31 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using SprintCsharp.Application.Services;
+using SprintCsharp.Infra.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
-using SprintCsharp.Application.Interfaces;
-using SprintCsharp.Application.Services;
+using Microsoft.Extensions.Logging;
 using SprintCsharp.Infra.Data;
-using SprintCsharp.Infra.Repositories;
 using SprintCsharp.UI;
 
 var host = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration((ctx, cfg) => cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
     .ConfigureServices((ctx, services) =>
     {
-        services.AddDbContext<AppDbContext>(opts =>
-            opts.UseSqlServer(ctx.Configuration.GetConnectionString("DefaultConnection")));
+        // 🔑 Connection string Oracle diretamente aqui
+        var conn = "User Id=RM98600;Password=091105;Data Source=oracle.fiap.com.br:1521/ORCL;";
 
-        services.AddScoped<IUserRepository, EfUserRepository>();
-        services.AddScoped<IUserService, UserService>();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseOracle(conn)
+                   .LogTo(Console.WriteLine, LogLevel.Information) // debug opcional
+        );
+
+        // Repositório / Serviço / UI
+        services.AddScoped<UserRepository>();
+        services.AddScoped<UserService>();
+        services.AddScoped<ConsoleApp>();
     })
     .Build();
 
+// executa app
 using var scope = host.Services.CreateScope();
-var svc = scope.ServiceProvider.GetRequiredService<IUserService>();
-await Menu.RunAsync(svc);
+var app = scope.ServiceProvider.GetRequiredService<ConsoleApp>();
+await app.RunAsync();

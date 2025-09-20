@@ -1,22 +1,31 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SprintCsharp.Domain.Entities;
 
-namespace SprintCsharp.Infra.Data;
-
-public class AppDbContext : DbContext
+namespace SprintCsharp.Infra.Data
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-    public DbSet<User> Users { get; set; } = null!;
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public class AppDbContext : DbContext
     {
-        modelBuilder.Entity<User>(b =>
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        public DbSet<User> Users { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            b.ToTable("Users");
-            b.HasKey(u => u.Id);
-            b.Property(u => u.Name).HasMaxLength(200).IsRequired();
-            b.Property(u => u.Email).HasMaxLength(200).IsRequired();
-            b.Property(u => u.Balance).HasColumnType("decimal(18,2)");
-        });
+            modelBuilder.Entity<User>(b =>
+            {
+                b.ToTable("USERS");
+                b.HasKey(u => u.Id);
+
+                b.Property(u => u.Id).HasColumnName("ID");
+                b.Property(u => u.Name).HasColumnName("NAME").HasMaxLength(100).IsRequired();
+                b.Property(u => u.Email).HasColumnName("EMAIL").HasMaxLength(150).IsRequired();
+                b.Property(u => u.Balance).HasColumnName("BALANCE").HasColumnType("NUMBER(18,2)");
+                b.Property(u => u.PreferredInvestment).HasColumnName("PREFERREDINVESTMENT").HasConversion<int>();
+                b.Property(u => u.Level).HasColumnName("PROFESSIONLEVEL").HasConversion<int>();
+                b.Property(u => u.UpdatedAt).HasColumnName("UPDATEDAT").HasColumnType("TIMESTAMP").IsRequired(false);
+            });
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }
