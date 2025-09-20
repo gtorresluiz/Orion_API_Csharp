@@ -5,6 +5,15 @@ O objetivo é simular uma **plataforma digital de investimentos** com um tom jov
 
 ---
 
+## Integrantes 
+
+Eduardo Fedeli Souza (RM550132)
+Gabriel Torres Luiz (RM98600)
+Murilo Henrique Obinata (RM99855)
+Otávio Vitoriano Da Silva (RM552012)
+
+---
+
 ## 🚀 Tecnologias Utilizadas
 
 - **C# 12**  
