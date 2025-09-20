@@ -1,4 +1,4 @@
-# 📈 Plataforma de Investimentos Gamificada - CRUD Simples (C# + Oracle)
+# 📈 Plataforma de Investimentos - CRUD Simples (C# + Oracle)
 
 Este projeto é uma aplicação **ASP.NET Core MVC** conectada a um **banco de dados Oracle**.  
 O objetivo é simular uma **plataforma digital de investimentos** com um tom jovem e gamificado, permitindo o gerenciamento de usuários com saldo, nível de profissão e tipo de investimento.
@@ -19,13 +19,13 @@ O objetivo é simular uma **plataforma digital de investimentos** com um tom jov
 
 A solução foi organizada em **camadas** dentro de um único projeto para manter a arquitetura limpa:
 
-  # 📂 Application # Serviços e lógica de negócios
-  # 📂 Domain # Modelos e entidades
-  # 📂 Infra # Repositórios e acesso a dados
-  # 📂 Migrations # Migrações do EF Core (se aplicável)
-  # 📂 Views # Páginas MVC (CRUD)
-  # Program.cs # Configuração principal da aplicação
-  # AppDbContext.cs # Configuração do banco de dados
+  ### 📂 Application # Serviços e lógica de negócios
+  ### 📂 Domain # Modelos e entidades
+  ### 📂 Infra # Repositórios e acesso a dados
+  ### 📂 Migrations # Migrações do EF Core (se aplicável)
+  ### 📂 Views # Páginas MVC (CRUD)
+  ### Program.cs # Configuração principal da aplicação
+  ### AppDbContext.cs # Configuração do banco de dados
 
 ---
 
