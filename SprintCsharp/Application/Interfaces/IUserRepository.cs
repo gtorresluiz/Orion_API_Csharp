@@ -1,12 +1,13 @@
 ﻿using SprintCsharp.Domain.Entities;
 
-namespace SprintCsharp.Application.Interfaces;
-
-public interface IUserRepository
+namespace SprintCsharp.Application.Interfaces
 {
-    Task<User> AddAsync(User user);
-    Task<IEnumerable<User>> GetAllAsync();
-    Task<User?> GetByIdAsync(int id);
-    Task UpdateAsync(User user);
-    Task DeleteAsync(int id);
+    public interface IUserRepository
+    {
+        IEnumerable<User> GetAll();
+        User? GetById(int id);
+        void Add(User user);
+        void Update(User user);
+        void Delete(int id);
+    }
 }

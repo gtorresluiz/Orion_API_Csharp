@@ -1,0 +1,110 @@
+﻿/* ------------------------------
+   Orión API - Tema Custom Swagger
+   Tons: #F6EEFD → #370C4A
+--------------------------------*/
+
+body {
+    background: linear-gradient(180deg, #F6EEFD 0%, #E4C9F9 25%, #CE95F3 50%, #641D83 100%) !important;
+    color: #2E004F !important;
+    font-family: 'Segoe UI', sans-serif !important;
+}
+
+/* Ajustes opcionais para garantir que o container do Swagger herde o tema */
+.swagger-ui {
+    background: linear-gradient(180deg, #F6EEFD 0%, #E4C9F9 25%, #CE95F3 50%, #641D83 100%) !important;
+    color: #2E004F !important;
+    font-family: 'Segoe UI', sans-serif !important;
+}
+
+/* Forçar que painéis internos não escondam o fundo (aumenta especificidade) */
+.swagger-ui .wrapper, .swagger-ui .information-container, .swagger-ui .swagger-ui .topbar {
+    background: transparent !important;
+}
+
+/* Barra superior */
+.swagger-ui .topbar {
+    background: linear-gradient(90deg, #641D83, #952FC1) !important;
+    border-bottom: 3px solid #BB59EC !important;
+}
+
+.swagger-ui .topbar-wrapper img {
+    content: url('https://upload.wikimedia.org/wikipedia/commons/a/ab/Swagger-logo.png');
+    height: 32px;
+}
+
+.swagger-ui .topbar-wrapper span {
+    color: #F6EEFD !important;
+    font-size: 22px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #370C4A;
+}
+
+/* Blocos das operações */
+.swagger-ui .opblock {
+    border-radius: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 10px rgba(100, 29, 131, 0.25);
+}
+
+    /* Cores personalizadas por método */
+    .swagger-ui .opblock.opblock-get {
+        border-color: #952FC1 !important;
+        background-color: rgba(246, 238, 253, 0.8) !important;
+    }
+
+    .swagger-ui .opblock.opblock-post {
+        border-color: #BB59EC !important;
+        background-color: rgba(228, 201, 249, 0.8) !important;
+    }
+
+    .swagger-ui .opblock.opblock-put {
+        border-color: #CE95F3 !important;
+        background-color: rgba(206, 149, 243, 0.8) !important;
+    }
+
+    .swagger-ui .opblock.opblock-delete {
+        border-color: #641D83 !important;
+        background-color: rgba(149, 47, 193, 0.15) !important;
+    }
+
+/* Título principal */
+.swagger-ui .info .title {
+    color: #370C4A !important;
+    font-weight: 800;
+    font-size: 2.2em;
+}
+
+/* Links */
+.swagger-ui .info a {
+    color: #641D83 !important;
+    font-weight: bold;
+}
+
+.swagger-ui .scheme-container {
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    border-radius: 8px;
+}
+
+/* Esquemas e caixas */
+.swagger-ui section.models {
+    background: rgba(246, 238, 253, 0.85);
+    border-radius: 8px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #F6EEFD;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #BB59EC;
+    border-radius: 5px;
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #952FC1;
+    }

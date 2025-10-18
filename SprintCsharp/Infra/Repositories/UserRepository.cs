@@ -1,40 +1,51 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SprintCsharp.Domain.Entities;
+﻿using SprintCsharp.Domain.Entities;
+using SprintCsharp.Application.Interfaces;
 using SprintCsharp.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
-namespace SprintCsharp.Infra.Repositories;
-
-public class UserRepository
+namespace SprintCsharp.Infra.Repositories
 {
-    private readonly AppDbContext _db;
-
-    public UserRepository(AppDbContext db)
+    public class UserRepository : IUserRepository
     {
-        _db = db;
-    }
+        private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-    public async Task<List<User>> GetAllAsync()
-        => await _db.Users.AsNoTracking().OrderBy(u => u.Id).ToListAsync();
+        public UserRepository(AppDbContext context, IConfiguration configuration)
+        {
+            _context = context;
+            _configuration = configuration;
+        }
 
-    public async Task<User?> GetByIdAsync(int id)
-        => await _db.Users.FindAsync(id);
+        public IEnumerable<User> GetAll() => _context.Users.AsNoTracking().ToList();
 
-    public async Task<User> AddAsync(User user)
-    {
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync();
-        return user;
-    }
+        public User? GetById(int id) => _context.Users.Find(id);
 
-    public async Task UpdateAsync(User user)
-    {
-        _db.Users.Update(user);
-        await _db.SaveChangesAsync();
-    }
+        public void Add(User user)
+        {
+            _context.Users.Add(user);
+            _context.SaveChanges();
+        }
 
-    public async Task DeleteAsync(User user)
-    {
-        _db.Users.Remove(user);
-        await _db.SaveChangesAsync();
+        public void Update(User user)
+        {
+            _context.Users.Update(user);
+            _context.SaveChanges();
+        }
+
+        public void Delete(int id)
+        {
+            var user = _context.Users.Find(id);
+            if (user == null) return;
+
+            _context.Users.Remove(user);
+            _context.SaveChanges();
+        }
+
+        private void ConfigureDbContextOptions(DbContextOptionsBuilder optionsBuilder)
+        {
+            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            optionsBuilder.UseSqlServer(connectionString);
+        }
     }
 }
