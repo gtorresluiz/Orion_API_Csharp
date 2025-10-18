@@ -32,17 +32,6 @@ namespace SprintCsharp.Controllers
             return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] User user)
-        {
-            var existing = _service.GetUserById(id);
-            if (existing == null) return NotFound();
-
-            user.Id = id;
-            _service.UpdateUser(user);
-            return NoContent();
-        }
-
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
