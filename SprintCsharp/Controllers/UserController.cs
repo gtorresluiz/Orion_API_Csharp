@@ -35,12 +35,12 @@ namespace SprintCsharp.Controllers
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] User updatedUser)
         {
-            // Busca o usuário existente
+   
             var existingUser = _service.GetUserById(id);
             if (existingUser == null)
-                return NotFound(); // Retorna 404 se não existir
+                return NotFound();
 
-            // Atualiza os campos do usuário existente
+            //atualiza com o id fixo
             existingUser.Id = existingUser.Id;
             existingUser.Name = updatedUser.Name;
             existingUser.Email = updatedUser.Email;
@@ -49,13 +49,9 @@ namespace SprintCsharp.Controllers
             existingUser.Level = updatedUser.Level;
             existingUser.UpdatedAt = updatedUser.UpdatedAt;
 
-            
-            // Adicione aqui outros campos que devem ser atualizados
-
-            // Salva as alterações
             _service.UpdateUser(existingUser);
 
-            return NoContent(); // 204 No Content para indicar sucesso
+            return NoContent(); 
         }
 
 
