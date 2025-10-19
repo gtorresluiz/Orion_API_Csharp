@@ -62,7 +62,8 @@ POST	    /api/users	        Cadastra um novo usuário
 PUT	      /api/users/{id}	    Atualiza os dados de um usuário existente
 DELETE	  /api/users/{id}	    Exclui um usuário do banco de dados
 
-🧩 Exemplo de Objeto JSON
+## 🧩 Exemplo de Objeto JSON
+
 POST /api/users
 {
   "name": "João Silva",
